@@ -1,6 +1,8 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const { Server } = require("socket.io");
+const dotenv = require("dotenv");
+dotenv.config();
 
 const io = new Server();
 const app = express();
@@ -20,8 +22,10 @@ io.on("connection", (socket) => {
   });
 });
 
-app.listen(8000, () => {
-  console.log("server is running on port 8000");
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`server is running on port: ${PORT}`);
 });
 
 io.listen(8001);

@@ -1,1 +1,1 @@
-# webRTC-video-calling-app
+# socket.io-video-calling-app

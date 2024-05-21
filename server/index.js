@@ -10,6 +10,7 @@ const app = express();
 app.use(bodyParser.json());
 
 const emailToSocketMapping = new Map();
+const socketToEmailMapping = new Map();
 
 io.on("connection", (socket) => {
   console.log("a new user connection");
@@ -17,9 +18,23 @@ io.on("connection", (socket) => {
     const { roomId, emailId } = data;
     console.log(`user ${emailId} joined`);
     emailToSocketMapping.set(emailId, socket.id);
+    socketToEmailMapping.set(socket.id, emailId);
     socket.join(roomId);
-    socket.emit("user-joined", { emailId });
+    socket.emit("joined-room", { emailId });
     socket.broadcast.to(roomId).emit("user-joined", { emailId });
+  });
+
+  socket.on("call-user", (data) => {
+    const { emailId, offer } = data;
+    const fromEmail = socketToEmailMapping.get(socket.id);
+    const socketId = emailToSocketMapping.get(emailId);
+    socket.to(socketId).emit("incoming-call", { from: fromEmail, offer });
+  });
+
+  socket.on("call-accepted", (data) => {
+    const { emailId, ans } = data;
+    const socketId = emailToSocketMapping.get(emailId);
+    socket.to(socketId).emit("call-accepted", { ans });
   });
 });
 

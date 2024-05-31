@@ -19,22 +19,31 @@ io.on("connection", (socket) => {
     console.log(`user ${emailId} joined`);
     emailToSocketMapping.set(emailId, socket.id);
     socketToEmailMapping.set(socket.id, emailId);
+    socket.emit("user:join", { emailId, roomId });
     socket.join(roomId);
-    socket.emit("joined-room", { emailId });
-    socket.broadcast.to(roomId).emit("user-joined", { emailId });
+    io.to(roomId).emit("user-joined", { emailId, id: socket.id });
   });
 
   socket.on("call-user", (data) => {
-    const { emailId, offer } = data;
-    const fromEmail = socketToEmailMapping.get(socket.id);
-    const socketId = emailToSocketMapping.get(emailId);
-    socket.to(socketId).emit("incoming-call", { from: fromEmail, offer });
+    const { newUserId, offer } = data;
+    io.to(newUserId).emit("incoming-call", {
+      existingUserId: socket.id,
+      offer,
+    });
   });
 
   socket.on("call-accepted", (data) => {
-    const { emailId, ans } = data;
-    const socketId = emailToSocketMapping.get(emailId);
-    socket.to(socketId).emit("call-accepted", { ans });
+    const { existingUserId, ans } = data;
+    socket.to(existingUserId).emit("call-finalised", { ans });
+  });
+
+  socket.on("disconnect", () => {
+    const emailId = socketToEmailMapping.get(socket.id);
+    if (emailId) {
+      emailToSocketMapping.delete(emailId);
+      socketToEmailMapping.delete(socket.id);
+    }
+    console.log("disconnect");
   });
 });
 

@@ -9,16 +9,16 @@ const Homepage = () => {
   const [emailId, setEmailId] = useState("");
   const [roomId, setRoomId] = useState("");
 
-  const handleJoinRoom = ({ roomId }) => {
+  const handleJoinRoom = () => {
     socket.emit("join-room", { emailId, roomId });
+  };
+
+  const handleJoinedRoom = ({ roomId }) => {
     navigate(`/room/${roomId}`);
   };
 
   useEffect(() => {
-    const handleJoinedRoom = ({ roomId }) => {
-      navigate(`/room/${roomId}`);
-    };
-    socket.on("joined-room", handleJoinedRoom);
+    socket.on("user:join", handleJoinedRoom);
 
     return () => {
       socket.off("joined-room", handleJoinedRoom);
